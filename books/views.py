@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
-from catalog.models import Book
-from catalog.serializers import BookSerializer
+from books.models import Book
+from books.serializers import BookSerializer
 
 
 class BookViewSet(viewsets.ModelViewSet):
