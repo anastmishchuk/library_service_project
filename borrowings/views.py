@@ -61,8 +61,12 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated], url_path='return')
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated], url_path="return")
     def return_borrowing(self, request, pk=None):
+        """
+        This function check if borrowing has already been returned,
+        mark the borrowing as returned and increase the inventory of the associated book by 1.
+        """
         # Get the borrowing object
         borrowing = self.get_object()
 
@@ -73,11 +77,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Mark the borrowing as returned (set actual_return_date to now)
         borrowing.actual_return_date = timezone.now()
         borrowing.save()
 
-        # Increase the inventory of the associated book by 1
         book = borrowing.book
         book.inventory += 1
         book.save()
