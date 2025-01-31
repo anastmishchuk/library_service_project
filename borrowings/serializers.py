@@ -24,10 +24,15 @@ class BorrowingSerializer(serializers.ModelSerializer):
     def validate(self, data):
         borrow_date = date.today()
         expected_return_date = data.get("expected_return_date")
+        book = data.get("book")
 
         if expected_return_date < borrow_date:
             raise serializers.ValidationError(
                 "Expected return date should be later than borrow date."
+            )
+        if book and book.inventory <= 0:
+            raise serializers.ValidationError(
+                f"The book '{book.title}' is not available for borrowing."
             )
 
         return data
