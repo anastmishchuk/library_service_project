@@ -22,6 +22,12 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         # Apply active filter
         queryset = self.filter_by_active(queryset)
 
+        # Filter by user_id if the user is an admin
+        if self.request.user.is_staff:
+            user_id = self.request.query_params.get("user_id")
+            if user_id is not None:
+                queryset = queryset.filter(user_id=user_id)
+
         return queryset
 
     def get_serializer_class(self):
@@ -50,3 +56,4 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(actual_return_date__isnull=False)
 
         return queryset
+
