@@ -1,8 +1,19 @@
+from datetime import date
 from rest_framework import serializers
 
 from borrowings.models import Borrowing
-from books.serializers import BookSerializer
-from users.serializers import UserSerializer
+from books.models import Book
+
+
+class BookBorrowingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = (
+            "id",
+            "title",
+            "author",
+            "daily_fee",
+        )
 
 
 class BorrowingSerializer(serializers.ModelSerializer):
@@ -10,28 +21,20 @@ class BorrowingSerializer(serializers.ModelSerializer):
         model = Borrowing
         fields = "__all__"
 
+    def validate(self, data):
+        borrow_date = date.today()
+        expected_return_date = data.get("expected_return_date")
 
-class BorrowingListSerializer(BorrowingSerializer):
-    book_id = serializers.CharField(
-        source="book.id"
-    )
-    user_id = serializers.CharField(
-        source="user.id"
-    )
+        if expected_return_date < borrow_date:
+            raise serializers.ValidationError(
+                "Expected return date should be later than borrow date."
+            )
 
-    class Meta:
-        model = Borrowing
-        fields = ("id",
-                  "borrow_date",
-                  "expected_return_date",
-                  "actual_return_date",
-                  "book_id",
-                  "user_id")
+        return data
 
 
 class BorrowingDetailSerializer(BorrowingSerializer):
-    book = BookSerializer(many=False, read_only=True)
-    user = UserSerializer(many=False, read_only=True)
+    book = BookBorrowingSerializer(read_only=True)
 
     class Meta:
         model = Borrowing
