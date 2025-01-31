@@ -16,9 +16,13 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         """
         Admins can see all borrowings, others see only their own.
         """
-        if self.request.user.is_staff:
-            return Borrowing.objects.all()
-        return Borrowing.objects.filter(user=self.request.user)
+        queryset = Borrowing.objects.all() if self.request.user.is_staff else Borrowing.objects.filter(
+            user=self.request.user)
+
+        # Apply active filter
+        queryset = self.filter_by_active(queryset)
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "retrieve":
@@ -31,3 +35,18 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         the currently authenticated user.
         """
         serializer.save(user=self.request.user)
+
+    def filter_by_active(self, queryset):
+        """
+        Filter the borrowings queryset to only include active borrowings
+        (i.e., those that have not been returned yet).
+        """
+        is_active = self.request.query_params.get("is_active")
+
+        if is_active is not None:
+            if is_active.lower() == "true":
+                queryset = queryset.filter(actual_return_date__isnull=True)
+            elif is_active.lower() == "false":
+                queryset = queryset.filter(actual_return_date__isnull=False)
+
+        return queryset
