@@ -67,10 +67,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         This function check if borrowing has already been returned,
         mark the borrowing as returned and increase the inventory of the associated book by 1.
         """
-        # Get the borrowing object
+
         borrowing = self.get_object()
 
-        # Check if borrowing has already been returned
         if borrowing.actual_return_date is not None:
             return Response(
                 {"detail": "This borrowing has already been returned."},
