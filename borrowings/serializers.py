@@ -2,18 +2,8 @@ from datetime import date
 from rest_framework import serializers
 
 from borrowings.models import Borrowing
-from books.models import Book
-
-
-class BookBorrowingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields = [
-            "id",
-            "title",
-            "author",
-            "daily_fee",
-        ]
+from books.serializers import BookSerializer
+from users.serializers import UserSerializer
 
 
 class BorrowingSerializer(serializers.ModelSerializer):
@@ -71,7 +61,8 @@ class BorrowingListSerializer(BorrowingSerializer):
 
 
 class BorrowingDetailSerializer(BorrowingSerializer):
-    book = BookBorrowingSerializer(read_only=True)
+    book = BookSerializer(read_only=True)
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Borrowing
