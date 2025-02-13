@@ -1,11 +1,12 @@
 from django.db import models
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 from books.models import Book
 from library_service_project import settings
 
 
 class Borrowing(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
     borrow_date = models.DateField(auto_now_add=True)
     expected_return_date = models.DateField()
     actual_return_date = models.DateField(null=True, blank=True)
@@ -24,5 +25,14 @@ class Borrowing(models.Model):
             )
         ]
 
+    def return_book(self) -> None:
+        """Updates actual_return_date and return the book to inventory."""
+        if self.actual_return_date:
+            raise ValidationError("This book has already been returned")
+        self.actual_return_date = timezone.now().date()
+        self.book.inventory += 1
+        self.book.save()
+        self.save()
+
     def __str__(self):
-        return f"ID - {self.id} ({self.borrow_date} - {self.expected_return_date})"
+        return f"Book {self.book.title} borrowed from {self.borrow_date} to {self.expected_return_date}"
