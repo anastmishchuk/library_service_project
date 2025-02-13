@@ -38,7 +38,7 @@ class BorrowingSerializer(serializers.ModelSerializer):
         expected_return_date = data.get("expected_return_date")
         book = data.get("book")
 
-        if expected_return_date < borrow_date:
+        if expected_return_date is not None and expected_return_date < borrow_date:
             raise serializers.ValidationError(
                 "Expected return date should be later than borrow date."
             )
