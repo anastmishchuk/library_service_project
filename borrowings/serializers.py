@@ -8,19 +8,30 @@ from books.models import Book
 class BookBorrowingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = (
+        fields = [
             "id",
             "title",
             "author",
             "daily_fee",
-        )
+        ]
 
 
 class BorrowingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrowing
-        fields = ("id", "borrow_date", "expected_return_date", "book", "user")
-        read_only_fields = ("borrow_date", "user")
+        fields = [
+            "id",
+            "borrow_date",
+            "expected_return_date",
+            "actual_return_date",
+            "book",
+            "user",
+        ]
+        read_only_fields = [
+            "borrow_date",
+            "actual_return_date",
+            "user",
+        ]
 
     def validate(self, data):
         borrow_date = date.today()
@@ -54,12 +65,21 @@ class BorrowingDetailSerializer(BorrowingSerializer):
 
     class Meta:
         model = Borrowing
-        fields = (
+        fields = [
             "id",
             "borrow_date",
             "expected_return_date",
             "actual_return_date",
             "book",
             "user"
-        )
-        read_only_fields = ("actual_return_date",)
+        ]
+        read_only_fields = ["actual_return_date",]
+
+
+class BorrowingReturnSerializer(BorrowingSerializer):
+    class Meta:
+        model = Borrowing
+        fields = []
+
+    def return_borrowing(self) -> None:
+        self.instance.return_book()
