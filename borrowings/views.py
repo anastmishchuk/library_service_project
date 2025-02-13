@@ -73,15 +73,13 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         if borrowing.actual_return_date is not None:
             return Response(
                 {"detail": "This borrowing has already been returned."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        borrowing.actual_return_date = timezone.now()
+        borrowing.actual_return_date = timezone.now().date()
+        borrowing.book.inventory += 1
+        borrowing.book.save()
         borrowing.save()
-
-        book = borrowing.book
-        book.inventory += 1
-        book.save()
 
         return Response(
             {"detail": "Borrowing returned successfully."},

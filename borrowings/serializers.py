@@ -19,7 +19,8 @@ class BookBorrowingSerializer(serializers.ModelSerializer):
 class BorrowingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrowing
-        fields = "__all__"
+        fields = ("id", "borrow_date", "expected_return_date", "book", "user")
+        read_only_fields = ("borrow_date", "user")
 
     def validate(self, data):
         borrow_date = date.today()
@@ -61,3 +62,4 @@ class BorrowingDetailSerializer(BorrowingSerializer):
             "book",
             "user"
         )
+        read_only_fields = ("actual_return_date",)
