@@ -60,6 +60,16 @@ class BorrowingSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class BorrowingListSerializer(BorrowingSerializer):
+    """
+    Serializer for listing borrowings.
+    Lists borrowings with slug fields for book title and user email.
+    """
+
+    book = serializers.SlugRelatedField(slug_field="title", read_only=True)
+    user = serializers.SlugRelatedField(slug_field="email", read_only=True)
+
+
 class BorrowingDetailSerializer(BorrowingSerializer):
     book = BookBorrowingSerializer(read_only=True)
 
