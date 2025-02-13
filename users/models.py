@@ -48,24 +48,6 @@ class User(AbstractUser):
     username = None
     email = models.EmailField(_("email address"), unique=True)
 
-    groups = models.ManyToManyField(
-        Group,
-        related_name="custom_user_groups",
-        blank=True,
-        verbose_name=_("groups"),
-        help_text=_(
-            "The groups this user belongs to. A user will get all permissions "
-            "granted to each of their groups."
-        ),
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name="custom_user_permissions",
-        blank=True,
-        verbose_name=_("user permissions"),
-        help_text=_("Specific permissions for this user."),
-    )
-
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
