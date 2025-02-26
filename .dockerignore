@@ -1,0 +1,7 @@
+Dockerfile
+.venv
+.idea
+.gitignore
+README.md
+docker-compose.yml
+db.sqlite3
