@@ -22,21 +22,33 @@ from borrowings.serializers import (
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
+    """
+        ViewSet for managing borrowings.
+
+        - Admin users can view all borrowings.
+        - Regular users can only see their own borrowings.
+        - Borrowings can be filtered by user ID and active status.
+        - Provides an endpoint for returning a borrowed item (admin only).
+        """
+
     queryset = Borrowing.objects.all()
     serializer_class = BorrowingSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         """
-        Admins can see all borrowings, others see only their own.
+        Retrieve borrowings based on user permissions.
+
+        - Admin users see all borrowings.
+        - Regular users see only their own borrowings.
+        - Supports filtering by `user_id` (admin only).
+        - Supports filtering by active status.
         """
         queryset = Borrowing.objects.all() if self.request.user.is_staff else Borrowing.objects.filter(
             user=self.request.user)
 
-        # Apply active filter
         queryset = self.filter_by_active(queryset)
 
-        # Filter by user_id if the user is an admin
         if self.request.user.is_staff:
             user_id = self.request.query_params.get("user_id")
             if user_id is not None:
@@ -45,6 +57,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
+        """
+        Returns the appropriate serializer class based on the action.
+        """
         if self.action == "list":
             return BorrowingListSerializer
         elif self.action == "retrieve":
@@ -54,7 +69,11 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         return BorrowingSerializer
 
     def create(self, request, *args, **kwargs):
-        """Allow creating borrowings only on /api/borrowings/, not on /api/borrowings/<id>/"""
+        """Creates a new borrowing instance.
+
+        Borrowings can only be created via the `/api/borrowings/` endpoint,
+        not on specific borrowing instances (`/api/borrowings/<id>/`).
+        """
         if self.action != "create":
             return Response(
                 {"detail": "You cannot create a borrowing on this endpoint."},
@@ -63,7 +82,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        """Disable updating borrowings via PUT/PATCH"""
+        """Prevents updating borrowings via PUT or PATCH requests."""
         return Response(
             {"detail": "Updating borrowings is not allowed."},
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
@@ -110,11 +129,21 @@ class BorrowingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], permission_classes=[IsAdminUser])
     def return_borrowing(self, request: Request, pk: str = None) -> Response:
         """
-        This function check if borrowing has already been returned,
-        mark the borrowing as returned and increase the inventory of the associated book by 1.
-        """
+        Returns a borrowed book.
 
+        - Checks if the book has already been returned.
+        - If not, marks the borrowing as returned.
+        - Increases the book's inventory count by 1.
+        - Only accessible by admin users.
+        """
         borrowing = self.get_object()
+
+        if borrowing.actual_return_date is not None:
+            return Response(
+                {"error": "This book has already been returned"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = BorrowingReturnSerializer(instance=borrowing, data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -133,15 +162,12 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         user_id = request.query_params.get("user_id")
         is_active = request.query_params.get("is_active")
 
-        # Filter by user if provided
         queryset = self.queryset.filter(user_id=user_id) if user_id else self.queryset
 
-        # Filter by active status if provided
         if is_active is not None:
             is_active = is_active.lower() == "true"
             queryset = queryset.filter(actual_return_date__isnull=is_active)
 
-        # Serialize and return the data
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

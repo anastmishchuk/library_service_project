@@ -7,6 +7,9 @@ from users.serializers import UserSerializer
 
 
 class BorrowingSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating and validating Borrowing instances.
+    """
     class Meta:
         model = Borrowing
         fields = [
@@ -24,6 +27,11 @@ class BorrowingSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
+        """
+        Custom validation for Borrowing creation:
+        - Ensures expected return date is not in the past.
+        - Checks if the book is available in inventory.
+        """
         borrow_date = date.today()
         expected_return_date = data.get("expected_return_date")
         book = data.get("book")
@@ -40,6 +48,10 @@ class BorrowingSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        """
+        Custom logic for borrowing creation -
+        decreases the book inventory by 1 upon borrowing.
+        """
         book = validated_data["book"]
 
         # Decrease the book inventory by 1
@@ -61,6 +73,10 @@ class BorrowingListSerializer(BorrowingSerializer):
 
 
 class BorrowingDetailSerializer(BorrowingSerializer):
+    """
+    Serializer for detailed borrowing view.
+    Includes full nested representations of book and user.
+    """
     book = BookSerializer(read_only=True)
     user = UserSerializer(read_only=True)
 
@@ -78,6 +94,10 @@ class BorrowingDetailSerializer(BorrowingSerializer):
 
 
 class BorrowingReturnSerializer(BorrowingSerializer):
+    """
+    Serializer for handling book return.
+    Calls the `return_book` method on the instance.
+    """
     class Meta:
         model = Borrowing
         fields = []
